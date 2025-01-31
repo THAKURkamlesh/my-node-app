@@ -1,36 +1,37 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = "thakurkamlesh/my-node-app"
-        DOCKER_CREDENTIALS = "dockerhub-credentials"
-    }
-
     stages {
-        stage('Clone Repository') {
+        stage('Checkout SCM') {
             steps {
-                git 'https://github.com/THAKURkamlesh/my-node-app.git'
+                // Checkout the code from the repository
+                checkout scm: [
+                    $class: 'GitSCM',
+                    branches: [[name: 'origin/main']],
+                    userRemoteConfigs: [[url: 'https://github.com/THAKURkamlesh/my-node-app.git', credentialsId: 'docker-hub-credentials']]
+                ]
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_IMAGE}:${env.BUILD_ID}")
+                    // Add steps to build the Docker image
+                    echo 'Building Docker image...'
+                    sh 'docker build -t my-node-app .'
                 }
             }
-           }
-checkout scm: [
-    $class: 'GitSCM',
-    branches: [[name: 'origin/main']],
-    userRemoteConfigs: [[url: 'https://github.com/THAKURkamlesh/my-node-app.git']]
-]
+        }
+
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('', DOCKER_CREDENTIALS) {
-                        docker.image("${DOCKER_IMAGE}:${env.BUILD_ID}").push()
-                        docker.image("${DOCKER_IMAGE}:${env.BUILD_ID}").push('latest') // Tag as latest
+                    // Add steps to push the Docker image
+                    echo 'Pushing Docker image...'
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                        sh 'docker tag my-node-app $DOCKER_USER/my-node-app:latest'
+                        sh 'docker push $DOCKER_USER/my-node-app:latest'
                     }
                 }
             }
@@ -39,9 +40,9 @@ checkout scm: [
         stage('Deploy Container') {
             steps {
                 script {
-                    sh "docker stop my-node-app || true"
-                    sh "docker rm my-node-app || true"
-                    sh "docker run -d -p 3000:3000 --name my-node-app ${DOCKER_IMAGE}:latest"
+                    // Add steps to deploy the container
+                    echo 'Deploying container...'
+                    sh 'docker-compose up -d'
                 }
             }
         }
