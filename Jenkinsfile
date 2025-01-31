@@ -42,7 +42,7 @@ pipeline {
                 script {
                     // Add steps to deploy the container
                     echo 'Deploying container...'
-                    sh 'docker compose up -d'
+                    sh 'docker-compose up -d'
                 }
             }
         }
