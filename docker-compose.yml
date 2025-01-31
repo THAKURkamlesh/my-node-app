@@ -1,0 +1,8 @@
+version: '3.8'
+
+services:
+  app:
+    image: thakurkamlesh/my-node-app:latest  # Ensure this matches your Docker Hub repo
+    ports:
+      - "3000:3000"
+    restart: always
