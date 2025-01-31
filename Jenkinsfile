@@ -19,8 +19,12 @@ pipeline {
                     docker.build("${DOCKER_IMAGE}:${env.BUILD_ID}")
                 }
             }
-        }
-
+           }
+checkout scm: [
+    $class: 'GitSCM',
+    branches: [[name: 'origin/main']],
+    userRemoteConfigs: [[url: 'https://github.com/THAKURkamlesh/my-node-app.git']]
+]
         stage('Push Docker Image') {
             steps {
                 script {
